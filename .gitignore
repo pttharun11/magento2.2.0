@@ -1,10 +1,15 @@
 # GitHub Actions Runner
 actions-runner/
 
-# Magento specific
+# Magento Core Large Folders (not needed in git)
+/dev/
+/pub/
+/lib/
+/setup/
 /vendor/
 /generated/
-/pub/static/
+
+# Magento specific
 /var/
 /app/etc/env.php
 /app/etc/config.php
