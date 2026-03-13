@@ -48,7 +48,7 @@ jobs:
 
       - name: Health Check
         run: |
-          STATUS=$(curl -o /dev/null -s -w "%{http_code}" --max-time 30 http://tharun.magento.com/)
+          STATUS=$(curl -L  -o /dev/null -s -w "%{http_code}" --max-time 30 http://tharun.magento.com/)
           echo "HTTP Status: $STATUS"
           if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 301 ] || [ "$STATUS" -eq 302 ]; then
             echo "✅ Magento is UP!"
