@@ -10,9 +10,14 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
+        with:
+          clean: false                  # ✅ skip git clean on post run
 
       - name: Fix Ownership
         run: sudo chown -R icodebees:icodebees /var/www/html/magento2
+
+      - name: Git Safe Directory
+        run: git config --global --add safe.directory /var/www/html/magento2
 
       - name: Check PHP
         run: /usr/bin/php8.2 -v
