@@ -1,51 +1,23 @@
-name: 🛒 Magento 2 Local CI/CD
+name: 🛒 Magento 2 CI/CD
 
 on:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   deploy:
-    name: 🚀 Deploy Magento 2
     runs-on: self-hosted
-    timeout-minutes: 30
-
     steps:
-      - name: 📥 Checkout Code
-        uses: actions/checkout@v4
-        with:
-          clean: true
+      - uses: actions/checkout@v4
 
-      - name: 🐘 Check PHP Version
+      - name: Check PHP
         run: /usr/bin/php -v
 
-      - name: ✅ Check Composer Version
-        run: /home/icodebees/bin/composer -V
+      - name: Composer Install
+        run: /home/icodebees/bin/composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --working-dir=/var/www/html/magento2
 
-      - name: ✅ Validate Composer
-        run: |
-          /home/icodebees/bin/composer validate \
-            --no-check-all \
-            --no-check-publish \
-            --working-dir=/var/www/html/magento2
-
-      - name: 📦 Install Dependencies
-        run: |
-          /home/icodebees/bin/composer install \
-            --no-dev \
-            --no-interaction \
-            --prefer-dist \
-            --optimize-autoloader \
-            --working-dir=/var/www/html/magento2
-
-      - name: ⚙️ Magento Setup
+      - name: Magento Deploy
         run: |
           cd /var/www/html/magento2
           /usr/bin/php bin/magento maintenance:enable
@@ -55,36 +27,8 @@ jobs:
           /usr/bin/php bin/magento cache:flush
           /usr/bin/php bin/magento maintenance:disable
 
-      - name: 🔐 Fix Permissions
-        run: |
-          sudo chown -R www-data:www-data /var/www/html/magento2
-          sudo chmod -R 755 /var/www/html/magento2
-          sudo chmod -R 777 \
-            /var/www/html/magento2/var/ \
-            /var/www/html/magento2/pub/static/ \
-            /var/www/html/magento2/pub/media/ \
-            /var/www/html/magento2/generated/
+      - name: Fix Permissions
+        run: sudo chown -R www-data:www-data /var/www/html/magento2
 
-      - name: 🏥 Health Check
-        run: |
-          STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://localhost)
-          echo "HTTP Status: $STATUS"
-          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 301 ] || [ "$STATUS" -eq 302 ]; then
-            echo "✅ Magento site is UP!"
-          else
-            echo "⚠️ Site returned: $STATUS"
-          fi
-
-      - name: ✅ Success
-        if: success()
-        run: |
-          echo "🎉 Deployment successful!"
-          echo "📅 $(date)"
-          echo "📝 Commit: ${{ github.sha }}"
-          echo "👤 By: ${{ github.actor }}"
-
-      - name: ❌ Failed
-        if: failure()
-        run: |
-          /usr/bin/php /var/www/html/magento2/bin/magento maintenance:disable || true
-          echo "💥 Deployment FAILED!"
+      - name: Health Check
+        run: curl -o /dev/null -s -w "HTTP Status:%{http_code}\n" http://localhost
