@@ -46,12 +46,6 @@ jobs:
             /var/www/html/magento2/pub/media/ \
             /var/www/html/magento2/generated/
 
-      - name: Health Check
-        run: |
-          STATUS=$(curl -L -k -o /dev/null -s -w "%{http_code}" --max-time 10 --connect-timeout 5 http://tharun.magento.com/)
-          echo "HTTP Status: $STATUS"
-          echo "✅ Magento is UP!"
-
       - name: Deploy Success
         run: |
           echo "🎉 Deployment Successful!"
