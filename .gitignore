@@ -1,8 +1,26 @@
+# GitHub Actions Runner
+actions-runner/
+
+# Magento specific
 /vendor/
 /generated/
 /pub/static/
 /var/
 /app/etc/env.php
 /app/etc/config.php
-.DS_Store
+
+# Logs
 *.log
+var/log/
+var/report/
+
+# Cache
+var/cache/
+var/page_cache/
+var/session/
+
+# Temp files
+.DS_Store
+*.swp
+*.swo
+Thumbs.db
