@@ -1,0 +1,99 @@
+name: 🛒 Magento 2 Local CI/CD
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel redundant runs
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: 🚀 Deploy Magento 2
+    runs-on: self-hosted          # ✅ Your local Ubuntu machine
+    timeout-minutes: 30
+
+    steps:
+      # Step 1: Checkout code
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      # Step 2: Verify PHP
+      - name: 🐘 Check PHP Version
+        run: php -v
+
+      # Step 3: Validate Composer
+      - name: ✅ Validate composer.json
+        run: composer validate --strict
+
+      # Step 4: Install dependencies
+      - name: 📦 Install Composer Dependencies
+        run: |
+          composer install \
+            --no-dev \
+            --no-interaction \
+            --prefer-dist \
+            --optimize-autoloader
+
+      # Step 5: Run Magento Setup
+      - name: ⚙️ Magento Setup Upgrade
+        run: |
+          cd /var/www/magento2
+          php bin/magento maintenance:enable
+          php bin/magento setup:upgrade --keep-generated
+          php bin/magento setup:di:compile
+          php bin/magento setup:static-content:deploy -f en_US
+          php bin/magento cache:flush
+          php bin/magento maintenance:disable
+
+      # Step 6: Fix Permissions
+      - name: 🔐 Fix Permissions
+        run: |
+          cd /var/www/magento2
+          find var generated vendor pub/static pub/media app/etc -type f \
+            -exec chmod g+w {} + 2>/dev/null || true
+          find var generated vendor pub/static pub/media app/etc -type d \
+            -exec chmod g+ws {} + 2>/dev/null || true
+          chown -R www-data:www-data /var/www/magento2 2>/dev/null || true
+
+      # Step 7: Health Check
+      - name: 🏥 Health Check
+        run: |
+          STATUS=$(curl -o /dev/null -s -w "%{http_code}" http://localhost/magento2)
+          echo "HTTP Status: $STATUS"
+          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 301 ]; then
+            echo "✅ Site is UP!"
+          else
+            echo "❌ Site returned: $STATUS"
+            exit 1
+          fi
+
+      # Step 8: Run Tests (optional)
+      - name: 🧪 Run Unit Tests
+        run: |
+          cd /var/www/magento2
+          php vendor/bin/phpunit \
+            --configuration dev/tests/unit/phpunit.xml.dist \
+            --testsuite "Magento Unit Tests" || true
+
+      # Step 9: Notify success
+      - name: ✅ Deployment Success
+        if: success()
+        run: |
+          echo "🎉 Deployment successful!"
+          echo "📅 Time: $(date)"
+          echo "📝 Commit: ${{ github.sha }}"
+          echo "👤 By: ${{ github.actor }}"
+
+      # Step 10: Notify failure
+      - name: ❌ Deployment Failed
+        if: failure()
+        run: |
+          echo "💥 Deployment FAILED!"
+          cd /var/www/magento2
+          php bin/magento maintenance:disable
