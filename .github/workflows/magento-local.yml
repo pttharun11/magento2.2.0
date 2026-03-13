@@ -48,7 +48,7 @@ jobs:
 
       - name: Deploy Success
         run: |
-          echo "🎉 Deployment Successful!"
-          echo "📅 $(date)"
-          echo "📝 Commit: ${{ github.sha }}"
-          echo "👤 By: ${{ github.actor }}"
+          echo " Deployment Successful!"
+          echo " $(date)"
+          echo " Commit: ${{ github.sha }}"
+          echo " By: ${{ github.actor }}"
