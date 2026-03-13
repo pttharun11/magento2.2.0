@@ -1,4 +1,4 @@
-name: 🛒 Magento 2 CI/CD
+name: Magento 2 CI/CD
 
 on:
   push:
@@ -37,18 +37,4 @@ jobs:
           /usr/bin/php8.2 bin/magento maintenance:disable
 
       - name: Fix Permissions
-        run: |
-          sudo chown -R www-data:www-data /var/www/html/magento2
-          sudo chmod -R 755 /var/www/html/magento2
-          sudo chmod -R 777 \
-            /var/www/html/magento2/var/ \
-            /var/www/html/magento2/pub/static/ \
-            /var/www/html/magento2/pub/media/ \
-            /var/www/html/magento2/generated/
-
-      - name: Deploy Success
-        run: |
-          echo " Deployment Successful!"
-          echo " $(date)"
-          echo " Commit: ${{ github.sha }}"
-          echo " By: ${{ github.actor }}"
+        run: sudo chown -R www-data:www-data /var/www/html/magento2 && sudo chmod -R 755 /var/www/html/magento2
