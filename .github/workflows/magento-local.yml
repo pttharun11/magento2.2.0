@@ -11,6 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Fix Ownership
+        run: sudo chown -R icodebees:icodebees /var/www/html/magento2
+
       - name: Check PHP
         run: /usr/bin/php8.2 -v
 
@@ -28,7 +31,14 @@ jobs:
           /usr/bin/php8.2 bin/magento maintenance:disable
 
       - name: Fix Permissions
-        run: sudo chown -R www-data:www-data /var/www/html/magento2
+        run: |
+          sudo chown -R www-data:www-data /var/www/html/magento2
+          sudo chmod -R 755 /var/www/html/magento2
+          sudo chmod -R 777 \
+            /var/www/html/magento2/var/ \
+            /var/www/html/magento2/pub/static/ \
+            /var/www/html/magento2/pub/media/ \
+            /var/www/html/magento2/generated/
 
       - name: Health Check
         run: curl -o /dev/null -s -w "HTTP Status:%{http_code}\n" http://localhost
